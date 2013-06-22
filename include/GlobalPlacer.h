@@ -103,11 +103,12 @@ private:
 class GlobalPlacer 
 {
 public:
-    GlobalPlacer(Placement &placement);
+    GlobalPlacer(Placement &placement,LayerMgr &layer);
 	void place();
 
 private:
     Placement& _placement;
+    LayerMgr&  _layer;
 	
 };
 

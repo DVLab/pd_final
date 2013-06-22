@@ -2,7 +2,7 @@
 #include <math.h>
 #include <iostream>
 
-ExampleFunction::ExampleFunction(Placement &placement):_placement(placement)
+ExampleFunction::ExampleFunction(Placement &placement,LayerMgr &layer):_placement(placement),_layer(layer)
 {
 }
 
@@ -30,7 +30,7 @@ void ExampleFunction::evaluateFG(const vector<double> &x, double &f, vector<doub
             Module& module = _placement.module(moduleID[k]);
             xi = (module.centerX()+net.pin(k).xOffset());
             yi = (module.centerY()+net.pin(k).yOffset());
-            zi = (module.centerZ());
+            zi = _layer.getModuleLayer(&module);
          }    
          else{
             xi = (x[moduleID[k]]+net.pin(k).xOffset());
@@ -80,7 +80,7 @@ void ExampleFunction::evaluateF(const vector<double> &x, double &f)
             Module& module = _placement.module(moduleID[k]);
             xi = (module.centerX()+net.pin(k).xOffset());
             yi = (module.centerY()+net.pin(k).yOffset());
-            zi = (module.centerZ());
+            zi = _layer.getModuleLayer(&module);
          }    
          else{
             xi = (x[moduleID[k]]+net.pin(k).xOffset());
@@ -103,6 +103,6 @@ void ExampleFunction::evaluateF(const vector<double> &x, double &f)
 
 unsigned ExampleFunction::dimension()
 {
-    return  num_blocks*3;
+    return  _placement.numModules()*3;
     // each two dimension represent the X and Y dimensions of each block
 }
