@@ -10,11 +10,17 @@ typedef vector<Module*> Layer;
 class LayerMgr
 {
 public:
-	LayerMgr(){}
-
-	LayerMgr(unsigned size){
-		resizeLayer(size); 
+	//LayerMgr(){}
+	
+	LayerMgr( unsigned size)
+	//	:_placement(placement)
+	{
+		resizeLayer(size);
 	}
+
+	//LayerMgr(unsigned size){
+	//	resizeLayer(size); 
+	//}
 	~LayerMgr(){}
 
 	void clearAll(){
@@ -52,6 +58,15 @@ public:
 		if((layerId<0)||(layerId>(int)_layerVec.size())){return 0;}
 		return getModuleFromLayer( _layerVec[(unsigned)layerId],i);
 	}
+	bool moveModule(Module *m,int layer_1,int layer_2){
+		if(m==0 || layer_1<0 || layer_2>(int)_layerVec.size()){
+			cout<<"Wrong!!!"<<endl;
+			cout<<"m: "<<m<<"  layer_1: "<<layer_1<<"  layer_2: "<<layer_2<<endl;
+			return false;
+		}
+		removeModule(layer_1,m);
+		addModule(layer_2,m);
+   }
 	const  int getModuleLayer( Module* m){
 		map<Module*,int>::const_iterator it=_moduleMap.find(m);
 		if(it==_moduleMap.end()){
@@ -61,6 +76,27 @@ public:
 			return it->second;
 		}
 	}
+/*
+	unsigned getLayerTSVNum(unsigned layer){
+		unsigned num = 0;
+		for(unsigned i = 0 ; i < _placement.numNets() ; i++){
+			bool hasModuleAbove = false;
+			bool hasModuleBelow = false;
+			for(unsigned j = 0 ; j < _placement.net(i).numPins() ; j++){
+				unsigned tmp = getModuleLayer(&_placement.module(_placement.net(i).pin(j).moduleId()));
+				if(tmp > layer)
+					hasModuleAbove = true;
+				if(tmp < layer)
+					hasModuleBelow = true;
+				if(hasModuleBelow && hasModuleAbove){
+					num += 1;
+					break;
+				}
+			}
+		}
+		return num;
+	}
+*/
 private:
 	Module* getModuleFromLayer(Layer& layer,unsigned i){
 		if(i>=layer.size()){
@@ -109,6 +145,7 @@ private:
 	}
 	vector<Layer> _layerVec;
 	map<Module*,int> _moduleMap;
+//	Placement& _placement;
 };
 
 

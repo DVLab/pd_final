@@ -29,35 +29,94 @@ void GlobalPlacer::place()
 	// The following example is only for analytical methods.
 	// if you use other methods, you can skip and delete it directly.
 	//////////////////////////////////////////////////////////////////
-	ExampleFunction ef(_placement,_layer); // require to define the object function and gradient function
 
-    vector<double> x(2); // solution vector, size: num_blocks*2 
-                         // each 2 variables represent the X and Y dimensions of a block
-    x[0] = 100; // initialize the solution vector
-    x[1] = 100;
-	_placement.setBoundary(
+    double CenterX = (_placement.boundryRight() + _placement.boundryLeft())/2;
+    double CenterY = (_placement.boundryTop() + _placement.boundryBottom())/2;
+    double CenterZ = 1 + (_layer.getLayerCount())/2;
+    //double placement_width = _placement.boundryRight() - _placement.boundryLeft();
+    //double placement_height = _placement.boundryTop() - _placement.boundryBottom();
+    //double placement_z = _layer.getLayerCount();
+    double num = _placement.numModules();
+    //double max_x = -10000000,max_y = -10000000,max_z = -10000000;
+    //double min_x = 10000000,min_y = 10000000,min_z = 10000000;
+		_placement.setBoundary(
 	   _placement.boundryLeft()/_layer.getLayerCount(),
 	   _placement.boundryBottom()/_layer.getLayerCount(),
 	   _placement.boundryRight()/_layer.getLayerCount(),
 	   _placement.boundryTop()/_layer.getLayerCount()); 
 
-    for(unsigned i = 0;i<_placement.numModules();++i)
-      _layer.addModule(0,&_placement.module(i));
 
+    ExampleFunction ef(_placement,_layer); // require to define the object function and gradient function
 
+    vector<double> x(2*num,0);
+
+    for(size_t i = 0 ; i < num ; i++){
+        int xx = rand()%200;
+        if(xx%2 == 0){
+            x[i] = CenterX + (double)xx;
+            x[i+num] = CenterY + (double)xx;
+        }
+        else{
+            x[i] = CenterX - (double)xx;
+            x[i+num] = CenterY - (double)xx;
+        }
+    }
+
+    for(size_t i = 0 ; i < num ; i++){
+        _placement.module(i).setCenterPosition(x[i], x[i+num]);
+    }
+
+/*
+	cout<<"********0_start**********"<<endl;
+	for(size_t i = 0 ; i < num ; i++){
+        cout<<_placement.module(i).name()<<endl;
+    }
+	cout<<"********0_end**********"<<endl;*/
+    double minBX = 10000.0;
+    double maxBX = -10000.0;
+    double minBY = 10000.0;
+    double maxBY = -10000.0;
+
+    for(size_t i = 0 ; i < num ; i++){
+        if(x[i] > maxBX)
+            maxBX = x[i];
+        if(x[i] < minBX)
+            minBX = x[i];
+        if(x[i+num] > maxBY)
+            maxBY = x[i+num];
+        if(x[i+num] < minBY)
+            minBY = x[i+num];
+    }
+    //cout<<minBX<<" "<<maxBX<<" "<<minBY<<" "<<maxBY<<endl;
+		
+    srand(time(NULL));
+    //double r = (double)rand()/RAND_MAX;
 
     NumericalOptimizer no(ef);
     no.setX(x); // set initial solution
-    no.setNumIteration(35); // user-specified parameter
-    no.setStepSizeBound(5); // user-specified parameter
+    no.setNumIteration(5000); // user-specified parameter
+    no.setStepSizeBound(50); // user-specified parameter
     no.solve(); // Conjugate Gradient solver
-
-    cout << "Current solution:" << endl;
-    for (unsigned i = 0; i < no.dimension(); i++) {
-        cout << "x[" << i << "] = " << no.x(i) << endl;
+	
+    for(size_t i = 0 ; i < num ; i++){
+        _placement.module(i).setCenterPosition(no.x(i), no.x(i+num));
     }
+
+    cout<<"before:  "<<minBX<<" "<<maxBX<<" "<<minBY<<" "<<maxBY<<endl;
+    for(size_t i = 0 ; i < num ; i++){
+        if(no.x(i) > maxBX)
+            maxBX = no.x(i);
+        if(no.x(i) < minBX)
+            minBX = no.x(i);
+        if(no.x(i+num) > maxBY)
+            maxBY = no.x(i+num);
+        if(no.x(i+num) < minBY)
+            minBY = no.x(i+num);
+    }
+    cout<<"after:   "<<minBX<<" "<<maxBX<<" "<<minBY<<" "<<maxBY<<endl;
+	cout<<CenterX<<"  "<<CenterY<<"  "<<CenterZ<<endl;
     cout << "Objective: " << no.objective() << endl;
-	////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
 	pLayer.resize(_layer.getLayerCount());
 //	vector<unsigned> moduleHasAdd;
     // iterator to vector element:
@@ -70,8 +129,12 @@ void GlobalPlacer::place()
 	   _placement.boundryBottom()/_layer.getLayerCount(),
 	   _placement.boundryRight()/_layer.getLayerCount(),
 	   _placement.boundryTop()/_layer.getLayerCount()); 
-
 	}
+
+	for(unsigned j=0;j<_placement.numModules();j++){
+		_layer.moveModule(&_placement.module(j),0,j%5);
+	}
+
 	for(unsigned i=0; i<_placement.numNets();i++){
 		Net& n0= _placement.net(i);
 		LayerMgr tempLayer(_layer.getLayerCount());
@@ -82,7 +145,7 @@ void GlobalPlacer::place()
 			Pin & p=n0.pin(j);
 			Module & m0 = _placement.module(p.moduleId());
 			tempLayer.addModule(_layer.getModuleLayer(&m0),&m0);
-			cout<<"module_layer:"<<_layer.getModuleLayer(&m0)<<endl;
+			cout<<"x:"<<m0.x()<<" y:"<<m0.y()<<" z:"<<_layer.getModuleLayer(&m0)<<endl;
 			max_z=max(max_z,_layer.getModuleLayer(&m0));
 			min_z=min(min_z,_layer.getModuleLayer(&m0));
 		}
@@ -116,7 +179,7 @@ void GlobalPlacer::place()
 				n->addPin(p);
 				m->addPin(p);
 			}
-			cout<<"max_z:"<<max_z<<" min_z:"<<min_z<<endl;
+			//cout<<"max_z:"<<max_z<<" min_z:"<<min_z<<endl;
 			if(max_z-min_z>0){
 				m= new Module("tsv_"+int2str((int) i )+"_"+int2str((int) j ),TSV_SIZE,TSV_SIZE,false);
 				pLayer[j].addModule(*m);
@@ -131,17 +194,12 @@ void GlobalPlacer::place()
 	}
 
 /*
-	for(unsigned i=0; i<_layer.getLayerCount();i++){
-		for(unsigned j=0; j<_layer.getLayerSize(i);j++){
-			Module * m= _layer.getModule(i,j);
-			pLayer[i].addModule(*m);
-		}
-	}
-*/
-	/*
+	cout<<"********1_start**********"<<endl;
 	for(unsigned i=0; i<_layer.getLayerCount();i++){
 		for(unsigned j=0;j<pLayer[i].numModules();j++){
 			cout<<pLayer[i].module(j).name()<<endl;
 		}
-	}*/
+	}
+	cout<<"********1_end**********"<<endl;
+*/
 }
