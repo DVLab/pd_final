@@ -48,6 +48,15 @@ public:
 		addModuleToLayer( _layerVec[(unsigned)layerId],m,layerId);
 		return 1;
 	}
+	bool moveModule(Module *m,int layer_1,int layer_2){
+		if(m==0 || layer_1<0 || layer_2>(int)_layerVec.size()){
+			cout<<"Wrong!!!"<<endl;
+			cout<<"m: "<<m<<"  layer_1: "<<layer_1<<"  layer_2: "<<layer_2<<endl;
+			return false;
+		}
+		addModule(layer_2,m);
+		removeModule(layer_1,m);
+        }
 	const  int getModuleLayer( Module* m){
 		map<Module*,int>::const_iterator it=_moduleMap.find(m);
 		if(it==_moduleMap.end()){
