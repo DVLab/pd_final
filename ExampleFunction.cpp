@@ -1,6 +1,7 @@
 #include "ExampleFunction.h"
 #include <math.h>
 #include <iostream>
+#include <limits>
 
 ExampleFunction::ExampleFunction(Placement &placement,LayerMgr &layer):_placement(placement),_layer(layer)
 {
@@ -11,9 +12,17 @@ void ExampleFunction::evaluateFG(const vector<double> &x, double &f, vector<doub
    f = 0;
    unsigned num = _placement.numModules();
    double r = 0.01*(_placement.boundryRight() - _placement.boundryLeft());
-
-   for(unsigned i = 0;i<3*num;++i)
+   for(unsigned i = 0;i<num;++i){
       g[i] = 0;
+      g[i+num] = 0;
+      g[i+2*num] = 0;
+      if( x[i]+2*_placement.module(i).width() < _placement.boundryLeft() || x[i]-2*_placement.module(i).width() > _placement.boundryRight() || 
+          x[i+num]+2*_placement.module(i).height() < _placement.boundryBottom() || x[i+num]-2*_placement.module(i).height() > _placement.boundryTop() ){
+         f = std::numeric_limits<double>::infinity();cout<<" in "<<endl;
+         return;
+      }
+      
+   }
 
 
    for(unsigned i = 0 ; i<_placement.numNets();++i){
@@ -65,6 +74,14 @@ void ExampleFunction::evaluateF(const vector<double> &x, double &f)
    f = 0;
    unsigned num = _placement.numModules();
    double r = 0.01*(_placement.boundryRight() - _placement.boundryLeft());
+
+   for(unsigned i = 0;i<num;++i){
+      if( x[i]+2*_placement.module(i).width() < _placement.boundryLeft() || x[i]-2*_placement.module(i).width() > _placement.boundryRight() || 
+          x[i+num]+2*_placement.module(i).height() < _placement.boundryBottom() || x[i+num]-2*_placement.module(i).height() > _placement.boundryTop() ){
+         f = std::numeric_limits<double>::infinity();cout<<"in"<<endl;
+         return;
+      }
+   }
 
    for(unsigned i = 0 ; i<_placement.numNets();++i){
       double f_x_1=0.0,f_x_2=0.0,f_y_1=0.0,f_y_2=0.0,f_z_1=0.0,f_z_2=0.0;
