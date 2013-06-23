@@ -61,6 +61,10 @@ public:
     void addModule(const Module &module) {_modules.push_back(module);}
     void addPin(const Pin &pin) {_pins.push_back(pin),_pins.back().setPinId(_pins.size());}
     void addRow(const Row &row) {_rows.push_back(row);}
+    void addNet(const Net &net) {_nets.push_back(net);} //ADD
+
+
+
 
     void setNumModules(unsigned size) {_modules.resize(size);}
     void setNumNets(unsigned size) {_nets.resize(size);}
@@ -78,6 +82,14 @@ public:
     ////////////////////
     vector<Row> m_sites; // for Legalization and Detailplace
     vector<Module> modules_bak; //for Detailplace
+
+	
+	void setBoundary(double t, double l ,double b ,double r ){//ADD
+		 _boundryTop=t;
+		 _boundryLeft=l;
+		 _boundryBottom=b;
+		 _boundryRight=r;
+	}
 
 private:
     /////////////////////////////////////////////

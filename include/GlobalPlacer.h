@@ -48,6 +48,10 @@ public:
 		addModuleToLayer( _layerVec[(unsigned)layerId],m,layerId);
 		return 1;
 	}
+	Module* getModule(int layerId,unsigned i){
+		if((layerId<0)||(layerId>(int)_layerVec.size())){return 0;}
+		return getModuleFromLayer( _layerVec[(unsigned)layerId],i);
+	}
 	const  int getModuleLayer( Module* m){
 		map<Module*,int>::const_iterator it=_moduleMap.find(m);
 		if(it==_moduleMap.end()){
@@ -58,6 +62,14 @@ public:
 		}
 	}
 private:
+	Module* getModuleFromLayer(Layer& layer,unsigned i){
+		if(i>=layer.size()){
+			return 0;
+		}
+		else{
+			return layer[i];
+		}
+	}
 	Module* removeModuleFromLayer(Layer& layer,unsigned i){
 		if(layer.size()==0){
 			return 0;
