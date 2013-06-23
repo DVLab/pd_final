@@ -32,11 +32,11 @@ void ExampleFunction::evaluateFG(const vector<double> &x, double &f, vector<doub
 	for(int i = 0 ; i < sqrt(binNum) ; i++){
 		binCenterX.push_back(_placement.boundryLeft() + (2*i+1)*((_placement.boundryRight() - _placement.boundryLeft())/ (sqrt(binNum)*2)));
 		binCenterY.push_back(_placement.boundryTop() - (2*i+1)*((_placement.boundryTop() - _placement.boundryBottom())/ (sqrt(binNum)*2)));
-		binCenterZ.push_back(0 + (2*i+1)*0.5);
+		//binCenterZ.push_back(0 + (2*i+1)*0.5);
 	}
 
 	// bin[x][y][z]
-	for(unsigned z = 0 ; z < sqrt(binNum) ; z++){
+//	for(unsigned z = 0 ; z < sqrt(binNum) ; z++){
 		for(unsigned y = 0 ; y < sqrt(binNum) ; y++){
 			for(unsigned i = 0 ; i < sqrt(binNum) ; i++){
 				D = 0;
@@ -72,7 +72,7 @@ void ExampleFunction::evaluateFG(const vector<double> &x, double &f, vector<doub
 					else{
 						Py = b_y*(dy - _placement.module(j).height()/2 - 2*binHeight)*(dy - _placement.module(j).height()/2 - 2*binHeight);
 						dPy = 2*b_y*(dy - _placement.module(j).height()/2 - 2*binHeight);
-					}
+					}/*
 					// z coordinate
 					a_z = 4/15;
 					b_z = 2/5;
@@ -88,17 +88,19 @@ void ExampleFunction::evaluateFG(const vector<double> &x, double &f, vector<doub
 					else{
 						Pz = b_z*(dz - 2.5)*(dz - 2.5);
 						dPz = 2*b_z*(dz - 2.5);
-					}
-					cout<<dx<<"  "<<dy<<"  "<<dz<<"  "<<dPx<<"  "<<dPy<<"  "<<dPz<<endl;
-					D += Px*Py*Pz;
-					g[j] = 2*(D - M)*Py*Pz*dPx;
-					g[j+num] = 2*(D-M)*Px*Pz*dPy;
-					g[j+2*num] = 2*(D-M)*Px*Py*dPz;
+					}*/
+					D += Px*Py;//*Pz;
+					g[j] = 2*(D-M)*Py*dPx;
+					g[j+num] = 2*(D-M)*Px*dPy;
+					//cout<<D<<" "<<dx<<"  "<<dy<<"  "<<g[j]<<" "<<g[j+num]<<"  "<<dPx<<"  "<<dPy<<"  "<<endl;
+					//g[j] = 2*(D - M)*Py*Pz*dPx;
+					//g[j+num] = 2*(D-M)*Px*Pz*dPy;
+					//g[j+2*num] = 2*(D-M)*Px*Py*dPz;
 				}
 				f += (D - M)*(D - M);
 			}
 		}
-	}
+//	}
 }
 
 void ExampleFunction::evaluateF(const vector<double> &x, double &f)
@@ -114,7 +116,7 @@ void ExampleFunction::evaluateF(const vector<double> &x, double &f)
 	double a_y, b_y;
 	double a_z, b_z;
 
-	double binNum = 81.0;
+	double binNum = 1.0;
 	double binWidth = (_placement.boundryRight() - _placement.boundryLeft()) / sqrt(binNum);
 	//cout<<"binWidth "<<binWidth<<endl;
 	double binHeight = (_placement.boundryTop() - _placement.boundryBottom()) / sqrt(binNum);
@@ -126,11 +128,11 @@ void ExampleFunction::evaluateF(const vector<double> &x, double &f)
 	for(int i = 0 ; i < sqrt(binNum) ; i++){
 		binCenterX.push_back(_placement.boundryLeft() + (2*i+1)*((_placement.boundryRight() - _placement.boundryLeft())/ (sqrt(binNum)*2)));
 		binCenterY.push_back(_placement.boundryTop() - (2*i+1)*((_placement.boundryTop() - _placement.boundryBottom())/ (sqrt(binNum)*2)));
-		binCenterZ.push_back(0 + (2*i+1)*0.5);
+		//binCenterZ.push_back(0 + (2*i+1)*0.5);
 	}
 
 	// bin[x][y][z]
-	for(unsigned z = 0 ; z < sqrt(binNum) ; z++){
+//	for(unsigned z = 0 ; z < sqrt(binNum) ; z++){
 		for(unsigned y = 0 ; y < sqrt(binNum) ; y++){
 			for(unsigned i = 0 ; i < sqrt(binNum) ; i++){
 				D = 0;
@@ -166,7 +168,7 @@ void ExampleFunction::evaluateF(const vector<double> &x, double &f)
 					else{
 						Py = b_y*(dy - _placement.module(j).height()/2 - 2*binHeight)*(dy - _placement.module(j).height()/2 - 2*binHeight);
 						//dPy = 2*b_y*(dy - _placement.module(j).height()/2 - 2*binHeight);
-					}
+					}/*
 					// z coordinate
 					a_z = 4/15;
 					b_z = 2/5;
@@ -182,14 +184,13 @@ void ExampleFunction::evaluateF(const vector<double> &x, double &f)
 					else{
 						Pz = b_z*(dz - 2.5)*(dz - 2.5);
 						//dPz = 2*b_z*(dz - 2.5);
-					}
-		
-					D += Px*Py*Pz;
+					}*/
+					D += Px*Py;//*Pz;
 				}
 				f += (D - M)*(D - M);
 			}
 		}
-	}
+//	}
 	/*
 	// Definition of Z(z)
 	double numTSV = 0 ;
@@ -212,6 +213,6 @@ void ExampleFunction::evaluateF(const vector<double> &x, double &f)
 
 unsigned ExampleFunction::dimension()
 {
-    return  _placement.numModules()*3;
+    return  _placement.numModules()*2;
     // each two dimension represent the X and Y dimensions of each block
 }
