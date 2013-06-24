@@ -7,13 +7,16 @@
 #include <sstream>
 #include <cassert>
 #include <math.h>
+
+#include "Util.h"
 #define TSV_SIZE 50
+#include <queue>
+#include <fstream>
 
 //extern Placement pLayer;
 extern vector<Placement*> pLayer;
 
-GlobalPlacer::GlobalPlacer(Placement &placement,LayerMgr &layer)
-	:_placement(placement),_layer(layer)
+GlobalPlacer::GlobalPlacer(Placement &placement,LayerMgr& layer):_placement(placement),_layer(layer)
 {
 
 }
@@ -24,20 +27,19 @@ string int2str(int i) {
   ss << i;
   return ss.str();
 }
-
 void GlobalPlacer::place()
 {
 	///////////////////////////////////////////////////////////////////
 	// The following example is only for analytical methods.
 	// if you use other methods, you can skip and delete it directly.
 	//////////////////////////////////////////////////////////////////
-
-    double CenterX = (_placement.boundryRight() + _placement.boundryLeft())/2;
-    double CenterY = (_placement.boundryTop() + _placement.boundryBottom())/2;
-    double CenterZ = 1 + (_layer.getLayerCount())/2;
-    //double placement_width = _placement.boundryRight() - _placement.boundryLeft();
-    //double placement_height = _placement.boundryTop() - _placement.boundryBottom();
-    //double placement_z = _layer.getLayerCount();
+    double wirelength,wirelength_2=0.0,wirelength_3=0.0;
+    priority_queue<double> Q_x;
+    priority_queue<double> Q_y;
+    double c_X = (_placement.boundryRight() + _placement.boundryLeft())/2;
+    double c_Y = (_placement.boundryTop() + _placement.boundryBottom())/2;
+    double d_X = _placement.boundryRight() - _placement.boundryLeft();
+    double d_Y = _placement.boundryTop() - _placement.boundryBottom();
     double num = _placement.numModules();
     //double max_x = -10000000,max_y = -10000000,max_z = -10000000;
     //double min_x = 10000000,min_y = 10000000,min_z = 10000000;
@@ -47,29 +49,31 @@ void GlobalPlacer::place()
 	   _placement.boundryRight(),///sqrt((double)_layer.getLayerCount()),
 	   _placement.boundryTop());///sqrt((double)_layer.getLayerCount()) ); 
 
+    ofstream outfile_x("output_x");
+    ofstream outfile_y("output_y");
 
-    ExampleFunction ef(_placement,_layer); // require to define the object function and gradient function
+    ExampleFunction ef(_placement); // require to define the object function and gradient function
 
-    vector<double> x(2*num,0);
+    vector<double> x(2*num,0); // solution vector, size: num_blocks*2 
+    vector<double> d(2*num,0);
+    vector<double> P_x;
+    vector<double> P_y;
 
-    for(size_t i = 0 ; i < num ; i++){
-        int xx = rand()%200;
-        if(xx%2 == 0){
-            x[i] = CenterX + (double)xx;
-            x[i+num] = CenterY + (double)xx;
+    for(unsigned i = 0;i<num;++i){
+        if(_placement.module(i).isFixed()){
+            x[i] = _placement.module(i).x();
+            x[i+num] = _placement.module(i).y();
         }
         else{
-            x[i] = CenterX - (double)xx;
-            x[i+num] = CenterY - (double)xx;
+            x[i] = c_X;
+            x[i+num] = c_Y;
         }
+        _placement.module(i).setCenterPosition(x[i],x[i+num]);
     }
 
-    for(size_t i = 0 ; i < num ; i++){
-        _placement.module(i).setCenterPosition(x[i], x[i+num]);
-    }
 
 	unsigned limit=_placement.numNets();
-
+/*
 cout<<"********0_start**********"<<endl;
 	for(unsigned j=0;j<_placement.numModules();j++){
 		Module& m=_placement.module(j);
@@ -94,51 +98,84 @@ cout<<"********0_start**********"<<endl;
 		cout<<endl;
 	}
 cout<<"********0_end**********"<<endl;
+*/
+    wirelength = _placement.computeHpwl();
 
-    double minBX = 10000.0;
-    double maxBX = -10000.0;
-    double minBY = 10000.0;
-    double maxBY = -10000.0;
-
-    for(size_t i = 0 ; i < num ; i++){
-        if(x[i] > maxBX)
-            maxBX = x[i];
-        if(x[i] < minBX)
-            minBX = x[i];
-        if(x[i+num] > maxBY)
-            maxBY = x[i+num];
-        if(x[i+num] < minBY)
-            minBY = x[i+num];
+    for(unsigned i = 0;i<_placement.numNets();++i){
+        double up=-10000,down=10000,right=-10000,left=10000;
+        for(unsigned j=0;j<_placement.net(i).numPins();++j){
+            double _x = _placement.net(i).pin(j).x();
+            double _y = _placement.net(i).pin(j).y();
+            if(_x > right)
+                right = _x;
+            if(_x < left)
+                left = _x;
+            if(_y > up)
+                up = _y;
+            if(_y < down)
+                down = _y;
+        }
+        wirelength_2 += up-down+right-left;
     }
-    //cout<<minBX<<" "<<maxBX<<" "<<minBY<<" "<<maxBY<<endl;
-/*		
-    srand(time(NULL));
-    //double r = (double)rand()/RAND_MAX;
 
     NumericalOptimizer no(ef);
+
     no.setX(x); // set initial solution
-    no.setNumIteration(5000); // user-specified parameter
-    no.setStepSizeBound(50); // user-specified parameter
+    no.setNumIteration(1000/*1.5*ite/(num/st)*/); // user-specified parameter
+    no.setStepSizeBound(10/*step*(num/st)*/); // user-specified parameter
     no.solve(); // Conjugate Gradient solver
 
     for(size_t i = 0 ; i < num ; i++){
         _placement.module(i).setCenterPosition(no.x(i), no.x(i+num));
+        _placement.module(i).setCenterPosition(no.x(i),no.x(i+num));
+        x[i] = no.x(i);
+        x[i+num] = no.x(i+num);
     }
 
-    cout<<"before:  "<<minBX<<" "<<maxBX<<" "<<minBY<<" "<<maxBY<<endl;
-    for(size_t i = 0 ; i < num ; i++){
-        if(no.x(i) > maxBX)
-            maxBX = no.x(i);
-        if(no.x(i) < minBX)
-            minBX = no.x(i);
-        if(no.x(i+num) > maxBY)
-            maxBY = no.x(i+num);
-        if(no.x(i+num) < minBY)
-            minBY = no.x(i+num);
+    ef.reset();
+    no.setX(x); 
+    no.setNumIteration(50000/*ite/(num/st)*/); 
+    no.setStepSizeBound(100/*step*(num/st)*/); 
+    no.solve();
+    
+
+    for(unsigned i = 0;i<num;++i){
+        _placement.module(i).setCenterPosition(no.x(i),no.x(i+num));
+        outfile_x<<no.x(i)<<endl;
+        outfile_y<<no.x(i+num)<<endl;
     }
-    cout<<"after:   "<<minBX<<" "<<maxBX<<" "<<minBY<<" "<<maxBY<<endl;
+
+    outfile_x.close();
+    outfile_y.close();
+
+
+    cout << "Objective: " << no.objective() << endl;
+    printf( "\nLast HPWL: %.0f\n",wirelength);
+    printf( "\nLast HPWL_2: %.0f\n",wirelength_2);
+    printf( "\nNew HPWL: %.0f\n",_placement.computeHpwl());
+
+    for(unsigned i = 0;i<_placement.numNets();++i){
+        double up=-1000000,down=1000000,right=-1000000,left=1000000;
+        for(unsigned j=0;j<_placement.net(i).numPins();++j){
+            double _x = _placement.net(i).pin(j).x();
+            double _y = _placement.net(i).pin(j).y();
+            if(_x > right)
+                right = _x;
+            if(_x < left)
+                left = _x;
+            if(_y > up)
+                up = _y;
+            if(_y < down)
+                down = _y;
+        }
+        wirelength_3 += up-down+right-left;
+    }
+
+    printf( "\nNew HPWL_2: %.0f\n",wirelength_3);
+	///////////////////////////////////////////////////////////////
+/*    cout<<"after:   "<<minBX<<" "<<maxBX<<" "<<minBY<<" "<<maxBY<<endl;
 	cout<<CenterX<<"  "<<CenterY<<"  "<<CenterZ<<endl;
-    cout << "Objective: " << no.objective() << endl;*/
+    cout << "Objective: " << no.objective() << endlu;*/
 ////////////////////////////////////////////////////////////////
 	pLayer.resize(_layer.getLayerCount());
 //	vector<unsigned> moduleHasAdd;
@@ -250,6 +287,7 @@ cout<<"********0_end**********"<<endl;
 		pLayer[i]->connectPinsWithModulesAndNets();
 		pLayer[i]->updateDesignStatistics_public();
 	}
+	/*
 	cout<<"********1_start**********"<<endl;
 	for(unsigned i=0; i<_layer.getLayerCount();i++){
 		for(unsigned j=0;j<pLayer[i]->numModules();j++){
@@ -275,6 +313,6 @@ cout<<"********0_end**********"<<endl;
 			cout<<endl;
 		}
 	}
-	cout<<"********1_end**********"<<endl;
+	cout<<"********1_end**********"<<endl;*/
 
 }

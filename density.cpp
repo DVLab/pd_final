@@ -52,8 +52,11 @@ void ExampleFunction::evaluateFG(const vector<double> &x, double &f, vector<doub
                dPx = 0;
             }
             else{
-               Px = b_x*(dx - _placement.module(j).width()/2 - 2*binWidth)*(dx - _placement.module(j).width()/2 - 2*binWidth);
-               dPx = 2*b_x*(dx - _placement.module(j).width()/2 - 2*binWidth);
+               Px = b_x*(absdx - _placement.module(j).width()/2 - 2*binWidth)*(absdx - _placement.module(j).width()/2 - 2*binWidth);
+               if(dx>0)
+                  dPx = 2*b_x*(dx - _placement.module(j).width()/2 - 2*binWidth);
+               else
+                  dPx = 2*b_x*(dx + _placement.module(j).width()/2 + 2*binWidth);
             }
             // y coordinate
             a_y = 4/((_placement.module(j).height() + 2*binHeight)*(_placement.module(j).height() + 4*binHeight));
@@ -69,8 +72,11 @@ void ExampleFunction::evaluateFG(const vector<double> &x, double &f, vector<doub
                dPy = 0;
             }
             else{
-               Py = b_y*(dy - _placement.module(j).height()/2 - 2*binHeight)*(dy - _placement.module(j).height()/2 - 2*binHeight);
-               dPy = 2*b_y*(dy - _placement.module(j).height()/2 - 2*binHeight);
+               Py = b_y*(absdy - _placement.module(j).height()/2 - 2*binHeight)*(absdy - _placement.module(j).height()/2 - 2*binHeight);
+               if(dy>0)
+                  dPy = 2*b_y*(dy - _placement.module(j).height()/2 - 2*binHeight);
+               else
+                  dPy = 2*b_y*(dy + _placement.module(j).height()/2 + 2*binHeight);
             }
             dP[j] = dPx;
             dP[j+num] = dPy;
@@ -80,8 +86,8 @@ void ExampleFunction::evaluateFG(const vector<double> &x, double &f, vector<doub
          }
          f += (D - M)*(D - M);
          for(unsigned j = 0 ; j < num ; j++){
-            g[j] += 2*(D-M)*dP[j]*P[j];
-            g[j+num] += 2*(D-M)*dP[j+num]*P[j+num];
+            g[j] += 2*(D-M)*dP[j]*P[j+num];
+            g[j+num] += 2*(D-M)*dP[j+num]*P[j];
          }
       }
    }
@@ -90,7 +96,7 @@ void ExampleFunction::evaluateF(const vector<double> &x, double &f)
 {
    f = 0;
    unsigned num = _placement.numModules();
-   double dx,dy;
+   double dx,dy,absdx,absdy;
    double Px,Py;
    double D = 0;
 
@@ -116,28 +122,30 @@ void ExampleFunction::evaluateF(const vector<double> &x, double &f)
             // x coordinate
             a_x = 4/((_placement.module(j).width() + 2*binWidth)*(_placement.module(j).width() + 4*binWidth));
             b_x = 2/(binWidth*(_placement.module(j).width() + 4*binWidth));
-            dx = abs(x[j] - binCenterX[i]);
-            if(dx >= 0 && dx <= (_placement.module(j).width()/2 + binWidth) ){
+            dx = x[j] - binCenterX[i];
+            absdx = abs(dx);
+            if(absdx >= 0 && absdx <= (_placement.module(j).width()/2 + binWidth) ){
                Px = 1 - a_x*dx*dx;
             }
-            else if (dx >= (_placement.module(j).width()/2 + 2*binWidth)){
+            else if (absdx >= (_placement.module(j).width()/2 + 2*binWidth)){
                Px = 0;
             }
             else{
-               Px = b_x*(dx - _placement.module(j).width()/2 - 2*binWidth)*(dx - _placement.module(j).width()/2 - 2*binWidth);
+               Px = b_x*(absdx - _placement.module(j).width()/2 - 2*binWidth)*(absdx - _placement.module(j).width()/2 - 2*binWidth);
             }
             // y coordinate
             a_y = 4/((_placement.module(j).height() + 2*binHeight)*(_placement.module(j).height() + 4*binHeight));
             b_y = 2/(binHeight*(_placement.module(j).height() + 4*binHeight));
-            dy = abs(x[j+num] - binCenterY[y]);
-            if(dy >= 0 && dy <= (_placement.module(j).height()/2 + binHeight)){
+            dy = x[j+num] - binCenterY[y];
+            absdy = abs(dy);
+            if(absdy >= 0 && absdy <= (_placement.module(j).height()/2 + binHeight)){
                Py = 1 - a_y*dy*dy;
             }
-            else if (dy >= (_placement.module(j).height()/2 + 2*binHeight)){
+            else if (absdy >= (_placement.module(j).height()/2 + 2*binHeight)){
                Py = 0;
             }
             else{
-               Py = b_y*(dy - _placement.module(j).height()/2 - 2*binHeight)*(dy - _placement.module(j).height()/2 - 2*binHeight);
+               Py = b_y*(absdy - _placement.module(j).height()/2 - 2*binHeight)*(absdy - _placement.module(j).height()/2 - 2*binHeight);
             }
             D += Px*Py;
          }
