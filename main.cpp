@@ -10,9 +10,17 @@
 #include <string.h>
 #include <time.h>
 
+#include <sstream>
 using namespace std;
 
  vector<Placement*> pLayer;
+
+string int2str(int i) {
+  string s;
+  stringstream ss(s);
+  ss << i;
+  return ss.str();
+}
 
 //Placement pLayer;
 
@@ -96,7 +104,7 @@ int main(int argc, char *argv[])
 
 		
         ////////////start to edit your code /////////////
-		LayerMgr layer(1);
+		LayerMgr layer(5);
 		GlobalPlacer globalPlacer(placement,layer);
 		globalPlacer.place();
 
@@ -120,13 +128,13 @@ int main(int argc, char *argv[])
     time_t legal_time_start = time(NULL);
     time_t total_legal_time = 0;
 
-	//for(unsigned iz=0;iz<pLayer.size();iz++){
-	 placement = *pLayer[0];
+	for(unsigned iz=0;iz<pLayer.size();iz++){
+	 placement = *pLayer[iz];
 	// placement.connectPinsWithModulesAndNets();
 	 
     if(param.bRunLegal){
 
-        placement.outputBookshelfFormat(placement.name()+".gp.pl");
+        placement.outputBookshelfFormat(placement.name()+"_"+int2str(iz)+".gp.pl");
 
         cout<<endl<<"////// Legalization ///////"<<endl;
 
@@ -143,7 +151,7 @@ int main(int argc, char *argv[])
             cout<<"legalization fail!"<<endl;
 
 
-        placement.outputBookshelfFormat(placement.name()+".lg.pl");
+        placement.outputBookshelfFormat(placement.name()+"_"+int2str(iz)+".lg.pl");
 
         lg_wirelength = placement.computeHpwl();
         printf( "\nHPWL: %.0f (%3.2f%%)\n",
@@ -189,7 +197,7 @@ int main(int argc, char *argv[])
         printf( "Detail HPWL: %.0f   Time: %6.1f sec (%.1f min)\n",dp_wirelength, (double)total_detail_time, (double)total_detail_time/ 60.0);
     printf( " ===================================================================\n" );
     printf( "       HPWL: %.0f   Time: %6.1f sec (%.1f min)\n", placement.computeHpwl(), (double)total_time, (double)total_time / 60.0 );
-//	}
+	}
 
     return 0;
 }

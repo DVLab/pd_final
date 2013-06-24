@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <iostream>
 #include <string>
-#include <sstream>
 #include <cassert>
 #include <math.h>
 
@@ -15,18 +14,13 @@
 
 //extern Placement pLayer;
 extern vector<Placement*> pLayer;
+extern string int2str(int i);
+
 
 GlobalPlacer::GlobalPlacer(Placement &placement, LayerMgr &layer)
 	:_placement(placement),_layer(layer)
 {
 
-}
-
-string int2str(int i) {
-  string s;
-  stringstream ss(s);
-  ss << i;
-  return ss.str();
 }
 void GlobalPlacer::place()
 {
@@ -45,10 +39,11 @@ void GlobalPlacer::place()
     //double max_x = -10000000,max_y = -10000000,max_z = -10000000;
     //double min_x = 10000000,min_y = 10000000,min_z = 10000000;
 		_placement.setBoundary(
-	   _placement.boundryLeft(),///sqrt((double)_layer.getLayerCount()),
-	   _placement.boundryBottom(),//sqrt((double)_layer.getLayerCount()),
-	   _placement.boundryRight(),///sqrt((double)_layer.getLayerCount()),
-	   _placement.boundryTop());///sqrt((double)_layer.getLayerCount()) ); 
+	   _placement.boundryTop()/sqrt((double)_layer.getLayerCount()),
+	   _placement.boundryLeft()/sqrt((double)_layer.getLayerCount()),
+	   _placement.boundryBottom()/sqrt((double)_layer.getLayerCount()),
+	   _placement.boundryRight()/sqrt((double)_layer.getLayerCount()) ); 
+
 
     ofstream outfile_x("output_x");
     ofstream outfile_y("output_y");
@@ -74,6 +69,11 @@ void GlobalPlacer::place()
 
 
 	unsigned limit=_placement.numNets();
+
+	for(unsigned j=0;j<_placement.numModules();j++){
+		Module& m=_placement.module(j);
+		cout<<m.name()<<" "<<m.width()<<" "<<m.height()<<endl;
+	}
 /*
 cout<<"********0_start**********"<<endl;
 	for(unsigned j=0;j<_placement.numModules();j++){
@@ -135,7 +135,7 @@ cout<<"********0_end**********"<<endl;
 
     ef.reset();
     no.setX(x); 
-    no.setNumIteration(50000/*ite/(num/st)*/); 
+    no.setNumIteration(10000/*ite/(num/st)*/); 
     no.setStepSizeBound(100/*step*(num/st)*/); 
     no.solve();
     
@@ -187,10 +187,10 @@ cout<<"********0_end**********"<<endl;
 	for(unsigned i=0; i<pLayer.size();i++){
 		pLayer[i]=new Placement();
 		pLayer[i]->setBoundary(
-	   _placement.boundryLeft(),
+	   _placement.boundryTop(),
+	   _placement.boundryLeft(),//_layer.getLayerCount(),
 	   _placement.boundryBottom(),//_layer.getLayerCount(),
-	   _placement.boundryRight(),//_layer.getLayerCount(),
-	   _placement.boundryTop());//_layer.getLayerCount()); 
+	   _placement.boundryRight());//_layer.getLayerCount()); 
 	   pLayer[i]->setRowHeight(_placement.getRowHeight());
 	   pLayer[i]->setRectangle(_placement.rectangleChip());
 	   pLayer[i]->setName(_placement.name());
@@ -213,10 +213,15 @@ cout<<"********0_end**********"<<endl;
 //		cout<<"layer_count:"<<_layer.getLayerCount();
 		int min_z=_layer.getLayerCount();
 		int max_z=0;
+		double sum_x=0;
+		double sum_y=0;
 		for(unsigned j=0; j<n0.numPins(); j++){
 			Pin & p=n0.pin(j);
 			Module & m0 = _placement.module(p.moduleId());
 			tempLayer.addModule(_layer.getModuleLayer(&m0),&m0);
+			sum_x+=m0.centerX();
+			sum_y+=m0.centerY();
+
 		//	cout<<"x:"<<m0.x()<<" y:"<<m0.y()<<" z:"<<_layer.getModuleLayer(&m0)<<endl;
 			max_z=max(max_z,_layer.getModuleLayer(&m0));
 			min_z=min(min_z,_layer.getModuleLayer(&m0));
@@ -226,8 +231,8 @@ cout<<"********0_end**********"<<endl;
 				Net* np = new Net();
 				pLayer[j]->addNet(*np);
 				Net& n=pLayer[j]->net(pLayer[j]->numNets()-1);
-				double sum_x=0;
-				double sum_y=0;
+		//		double sum_x=0;
+		//		double sum_y=0;
 				Module* mp=0;//new Module();
 			//	mp=0;
 			//	delete mp;
@@ -236,9 +241,7 @@ cout<<"********0_end**********"<<endl;
 				for(unsigned k=0;k<tempLayer.getLayerSize(j);k++){
 					Module* m0=tempLayer.getModule(j,k);
 					map<Module*,Module*>::iterator it=moduleMap.find(m0);
-					sum_x+=m0->centerX();
-					sum_y+=m0->centerY();
-				//	cout<<m0->name()<<endl;	
+					//	cout<<m0->name()<<endl;	
 					if(it==moduleMap.end()){
 				//		cout<<"type1"<<endl;
 						mp=new Module(m0->name(),m0->width(),m0->height(),m0->isFixed());
@@ -250,7 +253,6 @@ cout<<"********0_end**********"<<endl;
 				//		cout<<"m0:"<<m0->name()<<" m:"<<m.name()<<" id:"<<pLayer[j]->numModules()-1<<endl;
 						moduleMap[m0]=&m;
 						moduleIDMap[&m]=pLayer[j]->numModules()-1;
-
 
 						Pin * p=new Pin( pLayer[j]->numModules()-1  ,pLayer[j]->numNets()-1,0 , 0);
 						pLayer[j]->addPin(*p);
@@ -269,10 +271,12 @@ cout<<"********0_end**********"<<endl;
 				}
 				//cout<<"max_z:"<<max_z<<" min_z:"<<min_z<<endl;
 				if(max_z-min_z>0){
-					mp=new Module("tsv_"+int2str((int) i )+"_"+int2str((int) j ),TSV_SIZE,TSV_SIZE,false);
+					//string tsv_name="tsv_"+int2str((int) i )+"_"+int2str((int) j );
+					string tsv_name="tsv";//_"+int2str((int) i )+"_"+int2str((int) j );
+					mp=new Module(tsv_name ,TSV_SIZE,TSV_SIZE,true);
 					pLayer[j]->addModule(*mp);
 					Module& m=pLayer[j]->module(pLayer[j]->numModules()-1);
-					m.setCenterPosition(sum_x/tempLayer.getLayerSize(j),sum_y/tempLayer.getLayerSize(j));
+					m.setCenterPosition(sum_x/tempLayer.getTotalModuleNum(),sum_y/tempLayer.getTotalModuleNum());
 					Pin * p=new Pin( pLayer[j]->numModules()-1 ,pLayer[j]->numNets()-1,0 , 0);
 					pLayer[j]->addPin(*p);				
 					n.addPin(p);

@@ -38,6 +38,13 @@ public:
 	unsigned getLayerSize(unsigned layerId){
 		return _layerVec[layerId].size();
 	}
+	unsigned getTotalModuleNum(){
+		unsigned s=0;
+		for(unsigned i=0;i<_layerVec.size();i++){
+			s+=getLayerSize(i);
+		}
+		return s;
+	}
 	unsigned getLayerCount(){
 		return _layerVec.size();
 	}
@@ -98,6 +105,8 @@ public:
 		return num;
 	}
 */
+
+
 private:
 	Module* getModuleFromLayer(Layer& layer,unsigned i){
 		if(i>=layer.size()){
