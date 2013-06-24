@@ -11,11 +11,14 @@ public:
 
     void evaluateFG(const vector<double> &x, double &f, vector<double> &g);
     void evaluateF(const vector<double> &x, double &f);
+    void density(const vector<double> &x, double &f);
     unsigned dimension();
+    double abs(double a,bool& inv);
     void reset();
 
 private:
     Placement& _placement;
+    double _last;
     int count;
 };
 #endif // EXAMPLEFUNCTION_H

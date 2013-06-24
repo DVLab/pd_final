@@ -358,7 +358,7 @@ cout<<"********0_end**********"<<endl;
 	        
 	    }
 	}
-	//cout<<"bbb"<<endl;
+	cout<<"bbb"<<endl;
 	//for(size_t i = 0 ; i < num ; i++)
 	//	cout<<_layer.getModuleLayer(&_placement.module(i))<<" ";
 	/int count = 0 ;

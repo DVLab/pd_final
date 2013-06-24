@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
 
 		
         ////////////start to edit your code /////////////
-		LayerMgr layer(4);
+		LayerMgr layer(1);
 		GlobalPlacer globalPlacer(placement,layer);
 		globalPlacer.place();
 
