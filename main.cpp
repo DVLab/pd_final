@@ -12,7 +12,9 @@
 
 using namespace std;
 
-extern vector<Placement> pLayer;
+ vector<Placement*> pLayer;
+
+//Placement pLayer;
 
 bool handleArgument( const int& argc, char* argv[], CParamPlacement& param )
 {
@@ -94,7 +96,7 @@ int main(int argc, char *argv[])
 
 		
         ////////////start to edit your code /////////////
-		LayerMgr layer(5);
+		LayerMgr layer(1);
 		GlobalPlacer globalPlacer(placement,layer);
 		globalPlacer.place();
 
@@ -118,12 +120,19 @@ int main(int argc, char *argv[])
     time_t legal_time_start = time(NULL);
     time_t total_legal_time = 0;
 
-	for(unsigned iz=0;iz<pLayer.size();iz++){
-		Placement& placement = pLayer[iz];	
+	//for(unsigned iz=0;iz<pLayer.size();iz++){
+	 placement = *pLayer[0];
+	// placement.connectPinsWithModulesAndNets();
+	 
     if(param.bRunLegal){
 
+        placement.outputBookshelfFormat(placement.name()+".gp.pl");
+
         cout<<endl<<"////// Legalization ///////"<<endl;
+
         orig_wirelength = placement.computeHpwl();
+
+        printf( "\nHPWL: %.0f\n",orig_wirelength);
 
         CTetrisLegal legal(placement);
 
@@ -180,7 +189,7 @@ int main(int argc, char *argv[])
         printf( "Detail HPWL: %.0f   Time: %6.1f sec (%.1f min)\n",dp_wirelength, (double)total_detail_time, (double)total_detail_time/ 60.0);
     printf( " ===================================================================\n" );
     printf( "       HPWL: %.0f   Time: %6.1f sec (%.1f min)\n", placement.computeHpwl(), (double)total_time, (double)total_time / 60.0 );
-	}
+//	}
 
     return 0;
 }

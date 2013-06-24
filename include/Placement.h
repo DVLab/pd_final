@@ -90,7 +90,15 @@ public:
 		 _boundryBottom=b;
 		 _boundryRight=r;
 	}
-
+	void setRectangle(Rectangle r){ //ADD
+    	_rectangleChip=r;
+	}
+	void setRowHeight(double h){_rowHeight=h;} //ADD
+	void setName(string n){_name=n;}//ADD
+	void setPlName(string n){_loadplname=n;}//ADD
+	void updateDesignStatistics_public(){
+		updateDesignStatistics();
+	}
 private:
     /////////////////////////////////////////////
     // properties

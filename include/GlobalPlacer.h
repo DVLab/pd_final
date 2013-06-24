@@ -66,6 +66,7 @@ public:
 		}
 		removeModule(layer_1,m);
 		addModule(layer_2,m);
+		return true;
    }
 	const  int getModuleLayer( Module* m){
 		map<Module*,int>::const_iterator it=_moduleMap.find(m);
