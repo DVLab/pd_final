@@ -7,8 +7,8 @@
 #include <fstream>
 
 
-GlobalPlacer::GlobalPlacer(Placement &placement)
-	:_placement(placement)
+GlobalPlacer::GlobalPlacer(Placement &placement, LayerMgr &layer)
+	:_placement(placement),_layer(layer)
 {
 }
 
