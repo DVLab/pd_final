@@ -16,7 +16,8 @@
 //extern Placement pLayer;
 extern vector<Placement*> pLayer;
 
-GlobalPlacer::GlobalPlacer(Placement &placement,LayerMgr& layer):_placement(placement),_layer(layer)
+GlobalPlacer::GlobalPlacer(Placement &placement, LayerMgr &layer)
+	:_placement(placement),_layer(layer)
 {
 
 }
