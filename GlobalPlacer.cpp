@@ -226,17 +226,26 @@ cout<<"********0_end**********"<<endl;*/
 	cout<<"aaa "<<endl;
 	for(size_t i = 0 ; i < recordModule.size() ; i++){
 	    for(size_t j = 0 ; j < recordModule[i].size() ; j++){
-
+                    double _xx = _placement.module(recordModule[i].at(j)).x();
+                    double _yy = _placement.module(recordModule[i].at(j)).y();
 	
 
-		    if(i == 0)
+		    if(i == 0){
 		        _layer.addModule(3, &_placement.module(recordModule[i].at(j)));
-		    else if(i == 1)
+                        _placement.module(recordModule[i].at(j)).setCenterPosition(_xx,_yy);
+                    }
+		    else if(i == 1){
 			_layer.addModule(1, &_placement.module(recordModule[i].at(j)));
-		    else if(i == 2)
+                        _placement.module(recordModule[i].at(j)).setCenterPosition(c_X-_xx,_yy);
+                    }
+		    else if(i == 2){
 			_layer.addModule(2, &_placement.module(recordModule[i].at(j)));
-		    else if(i == 3)
+                        _placement.module(recordModule[i].at(j)).setCenterPosition(c_X-_xx,c_Y-_yy);
+                    }
+		    else if(i == 3){
 			_layer.addModule(0, &_placement.module(recordModule[i].at(j)));
+                        _placement.module(recordModule[i].at(j)).setCenterPosition(_xx,c_Y-_yy);
+                    }
 	        
 	    }
 	}
