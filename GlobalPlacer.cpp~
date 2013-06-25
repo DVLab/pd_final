@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <cassert>
 #include <math.h>
 
@@ -14,13 +15,18 @@
 
 //extern Placement pLayer;
 extern vector<Placement*> pLayer;
-extern string int2str(int i);
-
 
 GlobalPlacer::GlobalPlacer(Placement &placement, LayerMgr &layer)
 	:_placement(placement),_layer(layer)
 {
 
+}
+
+string int2str(int i) {
+  string s;
+  stringstream ss(s);
+  ss << i;
+  return ss.str();
 }
 void GlobalPlacer::place()
 {
@@ -28,12 +34,6 @@ void GlobalPlacer::place()
 	// The following example is only for analytical methods.
 	// if you use other methods, you can skip and delete it directly.
 	//////////////////////////////////////////////////////////////////
-		_placement.setBoundary(
-	   _placement.boundryTop(),///sqrt((double)_layer.getLayerCount()),
-	   _placement.boundryLeft(),//sqrt((double)_layer.getLayerCount()),
-	   _placement.boundryBottom(),//sqrt((double)_layer.getLayerCount()),
-	   _placement.boundryRight());//sqrt((double)_layer.getLayerCount()) ); 
-	
     double wirelength,wirelength_2=0.0,wirelength_3=0.0;
     priority_queue<double> Q_x;
     priority_queue<double> Q_y;
@@ -44,8 +44,11 @@ void GlobalPlacer::place()
     double num = _placement.numModules();
     //double max_x = -10000000,max_y = -10000000,max_z = -10000000;
     //double min_x = 10000000,min_y = 10000000,min_z = 10000000;
-
-		
+		_placement.setBoundary(
+	   _placement.boundryTop(),///sqrt((double)_layer.getLayerCount()),
+	   _placement.boundryLeft(),//sqrt((double)_layer.getLayerCount()),
+	   _placement.boundryBottom(),///sqrt((double)_layer.getLayerCount()),
+	   _placement.boundryRight());///sqrt((double)_layer.getLayerCount()) ); 
 
     ofstream outfile_x("output_x");
     ofstream outfile_y("output_y");
@@ -71,14 +74,6 @@ void GlobalPlacer::place()
 
 
 	unsigned limit=_placement.numNets();
-	for(unsigned i=0;i<_placement.numRows();i++){
-		
-
-	}
-/*	for(unsigned j=0;j<_placement.numModules();j++){
-		Module& m=_placement.module(j);
-		cout<<m.name()<<" "<<m.width()<<" "<<m.height()<<endl;
-	}*/
 /*
 cout<<"********0_start**********"<<endl;
 	for(unsigned j=0;j<_placement.numModules();j++){
@@ -103,10 +98,9 @@ cout<<"********0_start**********"<<endl;
 		}
 		cout<<endl;
 	}
-cout<<"********0_end**********"<<endl;*/
-
-	///////////////////////////////////////////////////////////////
-	wirelength = _placement.computeHpwl();
+cout<<"********0_end**********"<<endl;
+*/
+    wirelength = _placement.computeHpwl();
 
     for(unsigned i = 0;i<_placement.numNets();++i){
         double up=-10000,down=10000,right=-10000,left=10000;
@@ -158,7 +152,7 @@ cout<<"********0_end**********"<<endl;*/
     NumericalOptimizer no(ef);
 
     no.setX(x); // set initial solution
-    no.setNumIteration(1000/*1.5*ite/(num/st)*/); // user-specified parameter
+    no.setNumIteration(100/*1.5*ite/(num/st)*/); // user-specified parameter
     no.setStepSizeBound(50/*step*(num/st)*/); // user-specified parameter
     no.solve(); // Conjugate Gradient solver
 
@@ -271,7 +265,7 @@ cout<<"********0_end**********"<<endl;*/
 
     ef.reset();
     no.setX(x); 
-    no.setNumIteration(1000/*ite/(num/st)*/); 
+    no.setNumIteration(100/*ite/(num/st)*/); 
     no.setStepSizeBound(50/*step*(num/st)*/); 
     no.solve();
     
@@ -350,7 +344,7 @@ cout<<"********0_end**********"<<endl;*/
 		    recordModule[2].push_back(i);
 	    } 	
 	}
-
+	 
 	for(size_t i = 0 ; i < recordNumTSV.size() ; i++){
 	    cout<<"recordNumTSV["<<i<<"] "<<recordNumTSV[i].size()<<endl;
 	}
@@ -361,13 +355,13 @@ cout<<"********0_end**********"<<endl;*/
 	for(size_t i = 0 ; i < recordModule.size() ; i++){
 	    for(size_t j = 0 ; j < recordModule[i].size() ; j++){
 		    _layer.addModule((int)i, &_placement.module(recordModule[i].at(j)));
-
+	        
 	    }
 	}
-	//cout<<"bbb"<<endl;
+	cout<<"bbb"<<endl;
 	//for(size_t i = 0 ; i < num ; i++)
 	//	cout<<_layer.getModuleLayer(&_placement.module(i))<<" ";
-	//int count = 0 ;
+	/int count = 0 ;
  	//for(size_t i = 0 ; i < recordModule.size() ; i++)
 	//	count += recordModule[i].size();
 	//cout<<"count "<<count<<endl;
@@ -395,6 +389,7 @@ cout<<"********0_end**********"<<endl;*/
     }
 
     printf( "\nNew HPWL_2: %.0f\n",wirelength_3);
+	///////////////////////////////////////////////////////////////
 /*    cout<<"after:   "<<minBX<<" "<<maxBX<<" "<<minBY<<" "<<maxBY<<endl;
 	cout<<CenterX<<"  "<<CenterY<<"  "<<CenterZ<<endl;
     cout << "Objective: " << no.objective() << endlu;*/
@@ -408,10 +403,10 @@ cout<<"********0_end**********"<<endl;*/
 	for(unsigned i=0; i<pLayer.size();i++){
 		pLayer[i]=new Placement();
 		pLayer[i]->setBoundary(
-	   _placement.boundryTop(),
-	   _placement.boundryLeft(),//_layer.getLayerCount(),
+	   _placement.boundryLeft(),
 	   _placement.boundryBottom(),//_layer.getLayerCount(),
-	   _placement.boundryRight());//_layer.getLayerCount()); 
+	   _placement.boundryRight(),//_layer.getLayerCount(),
+	   _placement.boundryTop());//_layer.getLayerCount()); 
 	   pLayer[i]->setRowHeight(_placement.getRowHeight());
 	   pLayer[i]->setRectangle(_placement.rectangleChip());
 	   pLayer[i]->setName(_placement.name());
@@ -434,15 +429,10 @@ cout<<"********0_end**********"<<endl;*/
 //		cout<<"layer_count:"<<_layer.getLayerCount();
 		int min_z=_layer.getLayerCount();
 		int max_z=0;
-		double sum_x=0;
-		double sum_y=0;
 		for(unsigned j=0; j<n0.numPins(); j++){
 			Pin & p=n0.pin(j);
 			Module & m0 = _placement.module(p.moduleId());
 			tempLayer.addModule(_layer.getModuleLayer(&m0),&m0);
-			sum_x+=m0.centerX();
-			sum_y+=m0.centerY();
-
 		//	cout<<"x:"<<m0.x()<<" y:"<<m0.y()<<" z:"<<_layer.getModuleLayer(&m0)<<endl;
 			max_z=max(max_z,_layer.getModuleLayer(&m0));
 			min_z=min(min_z,_layer.getModuleLayer(&m0));
@@ -452,8 +442,8 @@ cout<<"********0_end**********"<<endl;*/
 				Net* np = new Net();
 				pLayer[j]->addNet(*np);
 				Net& n=pLayer[j]->net(pLayer[j]->numNets()-1);
-		//		double sum_x=0;
-		//		double sum_y=0;
+				double sum_x=0;
+				double sum_y=0;
 				Module* mp=0;//new Module();
 			//	mp=0;
 			//	delete mp;
@@ -462,7 +452,9 @@ cout<<"********0_end**********"<<endl;*/
 				for(unsigned k=0;k<tempLayer.getLayerSize(j);k++){
 					Module* m0=tempLayer.getModule(j,k);
 					map<Module*,Module*>::iterator it=moduleMap.find(m0);
-					//	cout<<m0->name()<<endl;	
+					sum_x+=m0->centerX();
+					sum_y+=m0->centerY();
+				//	cout<<m0->name()<<endl;	
 					if(it==moduleMap.end()){
 				//		cout<<"type1"<<endl;
 						mp=new Module(m0->name(),m0->width(),m0->height(),m0->isFixed());
@@ -474,6 +466,7 @@ cout<<"********0_end**********"<<endl;*/
 				//		cout<<"m0:"<<m0->name()<<" m:"<<m.name()<<" id:"<<pLayer[j]->numModules()-1<<endl;
 						moduleMap[m0]=&m;
 						moduleIDMap[&m]=pLayer[j]->numModules()-1;
+
 
 						Pin * p=new Pin( pLayer[j]->numModules()-1  ,pLayer[j]->numNets()-1,0 , 0);
 						pLayer[j]->addPin(*p);
@@ -492,12 +485,10 @@ cout<<"********0_end**********"<<endl;*/
 				}
 				//cout<<"max_z:"<<max_z<<" min_z:"<<min_z<<endl;
 				if(max_z-min_z>0){
-					//string tsv_name="tsv_"+int2str((int) i )+"_"+int2str((int) j );
-					string tsv_name="tsv";//_"+int2str((int) i )+"_"+int2str((int) j );
-					mp=new Module(tsv_name ,TSV_SIZE,TSV_SIZE,true);
+					mp=new Module("tsv_"+int2str((int) i )+"_"+int2str((int) j ),TSV_SIZE,TSV_SIZE,false);
 					pLayer[j]->addModule(*mp);
 					Module& m=pLayer[j]->module(pLayer[j]->numModules()-1);
-					m.setCenterPosition(sum_x/tempLayer.getTotalModuleNum(),sum_y/tempLayer.getTotalModuleNum());
+					m.setCenterPosition(sum_x/tempLayer.getLayerSize(j),sum_y/tempLayer.getLayerSize(j));
 					Pin * p=new Pin( pLayer[j]->numModules()-1 ,pLayer[j]->numNets()-1,0 , 0);
 					pLayer[j]->addPin(*p);				
 					n.addPin(p);
