@@ -118,16 +118,14 @@ cout<<"********0_end**********"<<endl;
         }
         wirelength_2 += up-down+right-left;
     }
-/*
     NumericalOptimizer no(ef);
 
     no.setX(x); // set initial solution
-    no.setNumIteration(1000); // user-specified parameter
-    no.setStepSizeBound(10); // user-specified parameter
+    no.setNumIteration(3000/*1.5*ite/(num/st)*/); // user-specified parameter
+    no.setStepSizeBound(10/*step*(num/st)*/); // user-specified parameter
     no.solve(); // Conjugate Gradient solver
 
-    for(size_t i = 0 ; i < num ; i++){
-        _placement.module(i).setCenterPosition(no.x(i), no.x(i+num));
+    for(unsigned i = 0;i<num;++i){
         _placement.module(i).setCenterPosition(no.x(i),no.x(i+num));
         x[i] = no.x(i);
         x[i+num] = no.x(i+num);
@@ -135,10 +133,9 @@ cout<<"********0_end**********"<<endl;
 
     ef.reset();
     no.setX(x); 
-    no.setNumIteration(50000ite/(num/st)); 
-    no.setStepSizeBound(100step*(num/st)); 
+    no.setNumIteration(30000/*ite/(num/st)*/); 
+    no.setStepSizeBound(100/*step*(num/st)*/); 
     no.solve();
-    
 
     for(unsigned i = 0;i<num;++i){
         _placement.module(i).setCenterPosition(no.x(i),no.x(i+num));
@@ -148,136 +145,6 @@ cout<<"********0_end**********"<<endl;
 
     outfile_x.close();
     outfile_y.close();
-*/
-    NumericalOptimizer no(ef);
-
-    no.setX(x); // set initial solution
-    no.setNumIteration(100/*1.5*ite/(num/st)*/); // user-specified parameter
-    no.setStepSizeBound(50/*step*(num/st)*/); // user-specified parameter
-    no.solve(); // Conjugate Gradient solver
-
-    for(unsigned i = 0;i<num;++i){
-        x[i] = no.x(i);
-        x[i+num] = no.x(i+num);
-        Q_x.push(x[i]);
-        Q_y.push(x[i+num]);
-        /*if(x[i]>=0)
-            Q_x.push(x[i]);
-        else
-            Q_x.push(-x[i]);
-        if(x[i+num]>=0)
-            Q_y.push(x[i+num]);
-        else
-            Q_y.push(-x[i+num]);*/
-    }
-
-    unsigned s = Q_x.size();
-    for(unsigned i = 0;i<s;++i){
-        P_x.push_back(Q_x.top());
-        P_y.push_back(Q_y.top());
-        Q_x.pop();
-        Q_y.pop();
-    }
-
-    srand(time(NULL));
-    for(unsigned i=0 ; i<num ; i++){
-        double w;
-        if(x[i] > P_x[num/15])
-            w = 14*(d_X/15);
-        else if(x[i] > P_x[(2*num)/15])
-            w = 13*(d_X/15);
-        else if(x[i] > P_x[(3*num)/15])
-            w = 12*(d_X/15);
-        else if(x[i] > P_x[(4*num)/15])
-            w = 11*(d_X/15);
-        else if(x[i] > P_x[(5*num)/15])
-            w = 10*(d_X/15);
-        else if(x[i] > P_x[(6*num)/15])
-            w = 9*(d_X/15);
-        else if(x[i] > P_x[(7*num)/15])
-            w = 8*(d_X/15);
-        else if(x[i] > P_x[(8*num)/15])
-            w = 7*(d_X/15);
-        else if(x[i] > P_x[(9*num)/15])
-            w = 6*(d_X/15);
-        else if(x[i] > P_x[(10*num)/15])
-            w = 5*(d_X/15);
-        else if(x[i] > P_x[(11*num)/15])
-            w = 4*(d_X/15);
-        else if(x[i] > P_x[(12*num)/15])
-            w = 3*(d_X/15);
-        else if(x[i] > P_x[(13*num)/15])
-            w = 2*(d_X/15);
-        else if(x[i] > P_x[(14*num)/15])
-            w = 1*(d_X/15);
-        else
-            w = 0;
-
-        double r = (double)rand()/RAND_MAX;
-        double _x= _placement.boundryLeft() + w + r*(d_X/15);
-
-        if(x[i+num] > P_y[num/15])
-            w = 14*(d_Y/15);
-        else if(x[i+num] > P_y[(2*num)/15])
-            w = 13*(d_Y/15);
-        else if(x[i+num] > P_y[(3*num)/15])
-            w = 12*(d_Y/15);
-        else if(x[i+num] > P_y[(4*num)/15])
-            w = 11*(d_Y/15);
-        else if(x[i+num] > P_y[(5*num)/15])
-            w = 10*(d_Y/15);
-        else if(x[i+num] > P_y[(6*num)/15])
-            w = 9*(d_Y/15);
-        else if(x[i+num] > P_y[(7*num)/15])
-            w = 8*(d_Y/15);
-        else if(x[i+num] > P_y[(8*num)/15])
-            w = 7*(d_Y/15);
-        else if(x[i+num] > P_y[(9*num)/15])
-            w = 6*(d_Y/15);
-        else if(x[i+num] > P_y[(10*num)/15])
-            w = 5*(d_Y/15);
-        else if(x[i+num] > P_y[(11*num)/15])
-            w = 4*(d_Y/15);
-        else if(x[i+num] > P_y[(12*num)/15])
-            w = 3*(d_Y/15);
-        else if(x[i+num] > P_y[(13*num)/15])
-            w = 2*(d_Y/15);
-        else if(x[i+num] > P_y[(14*num)/15])
-            w = 1*(d_Y/15);
-        else
-            w = 0;
-
-        r = (double)rand()/RAND_MAX;
-        double _y= _placement.boundryBottom() + w + r*(d_Y/15);
-
-
-        if(_placement.module(i).isFixed()){
-            x[i] = _placement.module(i).x();
-            x[i+num] = _placement.module(i).y();
-        }
-        else{
-            x[i] = _x;
-            x[i+num] = _y;
-        }
-        _placement.module(i).setPosition(x[i],x[i+num]);
-
-    }
-
-    ef.reset();
-    no.setX(x); 
-    no.setNumIteration(100/*ite/(num/st)*/); 
-    no.setStepSizeBound(50/*step*(num/st)*/); 
-    no.solve();
-    
-
-    for(unsigned i = 0;i<num;++i){
-        _placement.module(i).setCenterPosition(no.x(i),no.x(i+num));
-		  if(no.x(i)>_placement.boundryRight()||no.x(i)<_placement.boundryLeft())
-		  		cout<<"ddd"<<endl;
-		  if(no.x(i+num)>_placement.boundryTop()||no.x(i+num)<_placement.boundryBottom())
-		      cout<<"bbb"<<endl;
-		  //cout<<i<<" x "<<no.x(i)<<" y "<<no.x(i+num)<<"  ";
-    }
 
 
     vector< vector<unsigned> > recordModule(4);
@@ -354,14 +221,41 @@ cout<<"********0_end**********"<<endl;
 	cout<<"aaa "<<endl;
 	for(size_t i = 0 ; i < recordModule.size() ; i++){
 	    for(size_t j = 0 ; j < recordModule[i].size() ; j++){
-		    _layer.addModule((int)i, &_placement.module(recordModule[i].at(j)));
+		    if(i == 0)
+		        _layer.addModule(3, &_placement.module(recordModule[i].at(j)));
+		    else if(i == 1)
+			_layer.addModule(1, &_placement.module(recordModule[i].at(j)));
+		    else if(i == 2)
+			_layer.addModule(2, &_placement.module(recordModule[i].at(j)));
+		    else if(i == 3)
+			_layer.addModule(0, &_placement.module(recordModule[i].at(j)));
 	        
 	    }
 	}
+	vector<int> numTSV(3,0);
+	for(unsigned i = 0;i<_placement.numNets();++i){
+		int z_top = -10;
+		int z_bottom = 10;
+		for(unsigned j=0;j<_placement.net(i).numPins();++j){
+			unsigned id = _placement.net(i).pin(j).moduleId();
+			Module& mm = _placement.module(id);
+			if(_layer.getModuleLayer(&mm)>z_top)
+				z_top = _layer.getModuleLayer(&mm);
+			if(_layer.getModuleLayer(&mm)<z_bottom)
+				z_bottom = _layer.getModuleLayer(&mm);
+		}
+		for(unsigned j=0;j<numTSV.size();++j){
+			if(z_top>=j+1 && z_bottom<=j)
+				numTSV[j] += 1;
+		}cout<<i<<"  "<<z_top<<" "<<z_bottom<<" "<<numTSV[0]<<" "<<numTSV[1]<<" "<<numTSV[2]<<endl;
+	}
+	cout<<"1  "<<numTSV[0]<<endl;
+	cout<<"2  "<<numTSV[1]<<endl;
+	cout<<"3  "<<numTSV[2]<<endl;
 	//cout<<"bbb"<<endl;
 	//for(size_t i = 0 ; i < num ; i++)
 	//	cout<<_layer.getModuleLayer(&_placement.module(i))<<" ";
-	/int count = 0 ;
+	//int count = 0 ;
  	//for(size_t i = 0 ; i < recordModule.size() ; i++)
 	//	count += recordModule[i].size();
 	//cout<<"count "<<count<<endl;
